@@ -21,6 +21,16 @@
 #include <time.h>
 #include <stdarg.h>
 
+#ifndef _WIN32
+#include <stdint.h>
+
+static inline uint32_t _rotl(uint32_t value, int shift)
+{
+    shift &= 31;
+    return (value << shift) | (value >> ((32 - shift) & 31));
+}
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

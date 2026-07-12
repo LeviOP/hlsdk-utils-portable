@@ -17,19 +17,60 @@
 
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <limits.h>
+#define MAX_PATH PATH_MAX
+#define _MAX_PATH PATH_MAX
+typedef int 		BOOL;
+#define FALSE		    0
+#define TRUE		    1
+#ifndef NOMINMAX
+#ifndef max
+#define max(a,b)			(((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b)			(((a) < (b)) ? (a) : (b))
+#endif
+#endif
 #endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _WIN32
+#define _stat stat
+#define _S_IREAD  S_IRUSR
+#define _S_IWRITE S_IWUSR
+#endif
 
+#ifdef _WIN32
 #pragma warning(disable: 4142 4028)
 #define filelength IO_filelength
 #include <io.h>
 #undef filelength
 #pragma warning(default: 4142 4028)
+#endif
 
 #include <fcntl.h>
+#ifndef _WIN32
+#define _O_RDONLY O_RDONLY
+#define _O_WRONLY O_WRONLY
+#define _O_RDWR O_RDWR
+#define _O_CREAT  O_CREAT
+#define _O_TRUNC  O_TRUNC
+#define _O_BINARY 0
+#include <unistd.h>
+#define _open open
+#define _read read
+#define _write write
+#define _close close
+#define _access access
+#define _lseek lseek
+#endif
+#ifdef _WIN32
 #include <direct.h>
+#else
+#include <sys/statvfs.h>
+#endif
 #include <ctype.h>
 
 typedef enum
@@ -115,6 +156,10 @@ extern  float	coring;
 void MakeShadowSplits (void);
 
 //==============================================
+
+#ifndef _MSC_VER
+#define _int64 long long
+#endif
 
 _int64 getfreespace(char *filepath);
 long getfilesize(char *filename);

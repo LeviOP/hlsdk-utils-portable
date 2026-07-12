@@ -146,6 +146,7 @@ AllocTriangulation
 */
 triangulation_t	*AllocTriangulation (dplane_t *plane)
 {
+#ifdef _WIN32
 	triangulation_t	*t = NULL;
 
 
@@ -154,6 +155,13 @@ triangulation_t	*AllocTriangulation (dplane_t *plane)
 	{
 		t = GlobalLock( h );
 
+#else
+	triangulation_t	*t = calloc( 1, sizeof(triangulation_t) );
+
+
+	if ( t )
+	{
+#endif
 		t->numpoints = 0;
 		t->numedges = 0;
 		t->numtris = 0;
@@ -173,12 +181,18 @@ FreeTriangulation
 */
 void FreeTriangulation (triangulation_t *tr)
 {
+#ifdef _WIN32
     HANDLE h = GlobalHandle(tr);
     
 	if ( h )
 	{
 		GlobalUnlock(h);
 		GlobalFree(h);
+#else
+	if ( tr )
+	{
+		free(tr);
+#endif
 	}
 	else
 		Error("Cannot free triangulation memory!");
@@ -1056,7 +1070,11 @@ GatherSampleLight
 */
 #define NUMVERTEXNORMALS	162
 float	r_avertexnormals[NUMVERTEXNORMALS][3] = {
+#ifdef _WIN32
 #include "..\..\engine\anorms.h"
+#else
+#include "../../engine/anorms.h"
+#endif
 };
 
 #define VectorMaximum(a) ( max( (a)[0], max( (a)[1], (a)[2] ) ) )

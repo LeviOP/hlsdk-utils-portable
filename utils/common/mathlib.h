@@ -13,7 +13,9 @@
 
 // mathlib.h
 
+#define gamma gamma_hidden
 #include <math.h>
+#undef gamma
 
 #ifdef __cplusplus
 extern "C" {

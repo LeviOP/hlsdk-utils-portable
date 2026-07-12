@@ -325,6 +325,7 @@ getfreespace
 _int64
 getfreespace(char *filename)
 {
+#ifdef _WIN32
 	_int64				freespace = 0;
 	int					drive = 0;
 	struct _diskfree_t	df;
@@ -342,6 +343,14 @@ getfreespace(char *filename)
 	}
 
 	return freespace;
+#else
+	struct statvfs stat;
+
+	if (statvfs(filename, &stat) != 0)
+		return 0;
+
+	return stat.f_bavail * stat.f_frsize;
+#endif
 }
 
 
@@ -474,7 +483,9 @@ BuildVisMatrix
 void BuildVisMatrix (void)
 {
 	int		c;
+#ifdef _WIN32
     HANDLE h;
+#endif
 
 #ifdef HALFBIT
 	c = ((num_patches+1)*(((num_patches+1)+15)/16));
@@ -484,9 +495,14 @@ void BuildVisMatrix (void)
 
 	qprintf ("visibility matrix: %5.1f megs\n", c/(1024*1024.0));
 
+#ifdef _WIN32
     if ( h = GlobalAlloc( GMEM_FIXED | GMEM_ZEROINIT, c ) )
 		vismatrix = GlobalLock( h );
 	else
+#else
+	vismatrix = calloc( 1, c );
+	if ( !vismatrix )
+#endif
 		Error ("vismatrix too big");
 	
 	strcpy(vismatfile, source);
@@ -509,9 +525,13 @@ void FreeVisMatrix (void)
 {
 	if ( vismatrix )
 	{
+#ifdef _WIN32
 		HANDLE h = GlobalHandle(vismatrix);
 		GlobalUnlock(h);
 		GlobalFree(h);
+#else
+		free(vismatrix);
+#endif
 		vismatrix = NULL;
 	}
 }

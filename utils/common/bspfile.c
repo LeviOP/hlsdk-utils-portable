@@ -89,7 +89,14 @@ int FastChecksum(void *buffer, int bytes)
 	int	checksum = 0;
 
 	while( bytes-- )  
+#if defined(_MSC_VER) && _MSC_VER == 1200
 		checksum = _rotl(checksum, 4) ^ *((char *)buffer)++;
+#else
+	{
+		checksum = _rotl(checksum, 4) ^ *((char *)buffer);
+		buffer = (char *)buffer + 1;
+	}
+#endif
 
 	return checksum;
 }

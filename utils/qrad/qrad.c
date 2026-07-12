@@ -1514,7 +1514,11 @@ int main (int argc, char **argv)
 		if ( _access( global_lights, 0x04) == -1 ) 
 		{
 			// try looking in the directory we were run from
+#ifdef _WIN32
 			GetModuleFileName( NULL, global_lights, sizeof( global_lights ) );
+#else
+			readlink( "/proc/self/exe", global_lights, sizeof( global_lights ) );
+#endif
 			ExtractFilePath( global_lights, global_lights );
 			strcat( global_lights, "lights.rad" );
 		}

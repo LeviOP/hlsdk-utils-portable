@@ -277,6 +277,118 @@ void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int))
 #endif
 
 /*
+===================================================================
+
+POSIX
+
+===================================================================
+*/
+#include <unistd.h>
+#ifdef _POSIX_VERSION
+
+#define	USED
+
+#include <pthread.h>
+
+int		numthreads = -1;
+static pthread_mutex_t		crit;
+static int enter;
+
+void ThreadSetDefault(void)
+{
+	if (numthreads == -1)	// not set manually
+	{
+		numthreads = sysconf (_SC_NPROCESSORS_ONLN);
+		if (numthreads < 1 || numthreads > 32)
+			numthreads = 1;
+	}
+
+	qprintf ("%i threads\n", numthreads);
+}
+
+void ThreadLock(void)
+{
+	if (!threaded)
+		return;
+	pthread_mutex_lock(&crit);
+	if (enter)
+		Error("Recursive ThreadLock\n");
+	enter = 1;
+}
+
+void ThreadUnlock(void)
+{
+	if (!threaded)
+		return;
+	if (!enter)
+		Error("ThreadUnlock without lock\n");
+	enter = 0;
+	pthread_mutex_unlock(&crit);
+}
+
+/*
+=============
+RunThreadsOn
+=============
+*/
+// pthreads takes a void*(*)(void*), but the original RunThreadsOn impl took a
+// void(*)(int) which was then cast to an LPTHREAD_START_ROUTINE (already
+// sketchy on its own). To fit with this system, we wrap the function in a
+// struct that also holds its index.
+typedef struct
+{
+	int index;
+	void (*func)(int);
+} threadwrap_t;
+
+static void *ThreadWrapper(void *param)
+{
+	threadwrap_t *tw = (threadwrap_t *)param;
+	tw->func(tw->index);
+	free(tw);
+	return NULL;
+}
+
+void RunThreadsOn(int workcnt, qboolean showpacifier, void (*func)(int))
+{
+	pthread_t threadhandle[MAX_THREADS];
+	int		i;
+	int		start, end;
+
+	start = I_FloatTime();
+	dispatch = 0;
+	workcount = workcnt;
+	oldf = -1;
+	pacifier = showpacifier;
+	threaded = true;
+	if (pacifier)
+		setbuf(stdout, NULL);
+	//
+	// run threads in parallel
+	//
+	pthread_mutex_init(&crit, NULL);
+	for (i=0; i<numthreads ; i++)
+	{
+		threadwrap_t *tw = malloc(sizeof(*tw));
+		tw->index = i;
+		tw->func = func;
+		pthread_create(&threadhandle[i], NULL, ThreadWrapper, tw);
+	}
+
+	for (i=0; i<numthreads ; i++)
+		pthread_join (threadhandle[i], NULL);
+	pthread_mutex_destroy (&crit);
+
+	threaded = false;
+	end = I_FloatTime ();
+	if (pacifier)
+		printf (" (%i)\n", end-start);
+}
+
+#endif
+
+
+/*
 =======================================================================
 
   SINGLE THREAD
