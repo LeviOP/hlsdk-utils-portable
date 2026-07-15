@@ -16,7 +16,7 @@ SRCS := \
 OBJS := $(SRCS:.c=.o)
 
 CPPFLAGS := -I../common -DNDEBUG
-CFLAGS   := -std=gnu89 -O2 -g -Wno-implicit-int -Wno-return-type -MMD -MP -m32 -mfpmath=387 -march=pentium -fexcess-precision=fast -fwrapv
+CFLAGS   := -std=gnu89 -O3 -g -Wno-implicit-int -Wno-return-type -MMD -MP -ffloat-store -m32 -mfpmath=387 -march=pentium
 LDFLAGS  := -m32
 LDLIBS   := -lm -lpthread
 

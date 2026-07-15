@@ -165,7 +165,11 @@ void	WindingCenter (winding_t *w, vec3_t center)
 {
 	int		i;
 	vec3_t	d1, d2, cross;
+#if defined(_MSC_VER) && _MSC_VER == 1200
 	float	scale;
+#else
+	long double	scale;
+#endif
 
 	VectorCopy (vec3_origin, center);
 	for (i=0 ; i<w->numpoints ; i++)
