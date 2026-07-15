@@ -283,12 +283,12 @@ POSIX
 
 ===================================================================
 */
-#include <unistd.h>
-#ifdef _POSIX_VERSION
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 
 #define	USED
 
 #include <pthread.h>
+#include <unistd.h>
 
 int		numthreads = -1;
 static pthread_mutex_t		crit;
